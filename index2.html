@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Reprojection with EPSG.io Search</title>
+    <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+    <script src="https://unpkg.com/elm-pep"></script>
+    <style>
+      .map {
+        width: 100%;
+        height:60vh;
+        /* height:400px; */
+      }
+    </style>
+    <!-- from https://openlayers.org/en/latest/examples/reprojection-by-code.html -->
+  </head>
+  <body>
+    <div id="map" class="map"></div>
+    <form class="form-inline">
+      <label for="epsg-query">Search projection:</label>
+      <input type="text" id="epsg-query" placeholder="4326, 27700, 3031, US National Atlas, Swiss, France, ..." class="form-control" size="50" />
+      <button id="epsg-search" class="btn">Search</button>
+      <span id="epsg-result"></span>
+      <div>
+        <label for="render-edges">
+          Render reprojection edges
+          <input type="checkbox" id="render-edges">
+        </label>
+        <label for="show-graticule">
+          &nbsp;&nbsp;&nbsp;Show graticule
+          <input type="checkbox" id="show-graticule" checked="true" />
+        </label>
+      </div>
+    </form>
+    <script src="main2.js"></script>
+  </body>
+</html>
