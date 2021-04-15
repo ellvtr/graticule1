@@ -2,6 +2,7 @@ import 'ol/ol.css';
 import Graticule from 'ol/layer/Graticule';
 import Map from 'ol/Map';
 import OSM from 'ol/source/OSM';
+import Stamen from 'ol/source/Stamen';
 import Stroke from 'ol/style/Stroke';
 import TileImage from 'ol/source/TileImage';
 import TileLayer from 'ol/layer/Tile';
@@ -48,11 +49,23 @@ var graticule2 = new Graticule({
 const osmLayer = new TileLayer({
   source: new OSM(),
 });
-const baseLayers = [ osmLayer ];
+const stamen1 = new TileLayer({
+  source: new Stamen({
+    layer: 'watercolor',
+  }),
+  visible: false,
+});
+const stamen2 = new TileLayer({
+  source: new Stamen({
+    layer: 'toner',
+  }),
+  visible: false,
+});
+const baseLayers = [ osmLayer, stamen1, stamen2 ];
 
 var map = new Map({
   layers: [
-    osmLayer,
+    ...baseLayers,
     graticule],
   target: 'map',
   view: new View({
@@ -62,8 +75,7 @@ var map = new Map({
   }),
 });
 graticule2 && map.addLayer(graticule2)
-// console.log(`map`, map);
-window.debug = { map }
+window.debug = { map, baseLayers }
 
 var queryInput = document.getElementById('epsg-query');
 var searchButton = document.getElementById('epsg-search');
@@ -182,10 +194,7 @@ showGraticuleCheckbox.onchange = graticuleOnChange
 
 // Initiate:
 graticuleOnChange()
-// graticule.setVisible(showGraticuleCheckbox.checked);
 const match = window.location.search.match(/projQuery=\D*([0-9]*)\D*[^&]*/i);
-// const match = window.location.search.match(/projQuery=([0-9]*[^&])+/i);
-// console.log(`match`, match);
 const isMatch = !!(match && match[1]);
 const urlProjQueryNumber =  isMatch ? match[1] : 25832;
 search(urlProjQueryNumber);
@@ -207,10 +216,19 @@ baseLayers.forEach((layer, i)=>{
     border: 1px solid #999;
     box-shadow: rgb(238 238 238) 4px 4px 4px 0px;
   `;
-  div.innerHTML = `Layer ${i+1}, visible: ${layer.getVisible()}`;
+  div.id = `layer${i}`
+  div.innerHTML = `${layer.getVisible() ? '[✓]' : '[_]'} &nbsp; Layer ${i+1}`;
   div.onclick = ()=>{  
     layer.setVisible(!layer.getVisible());
-    div.innerHTML = div.innerHTML.replace(/true|false/gi, layer.getVisible());
+    // Switch other layers off:
+    baseLayers.forEach((lr, j)=>{  
+      if(j!==i){
+        lr.setVisible(false);
+      }
+      // Update div:
+      const div2 = document.getElementById(`layer${j}`);
+      div2.innerHTML = div2.innerHTML.replace(/✓|_/gi, lr.getVisible() ? '✓' : '_');
+    });
   }
   layerSwitcherDiv.appendChild(div)
 });
