@@ -7,28 +7,53 @@ import TileImage from 'ol/source/TileImage';
 import TileLayer from 'ol/layer/Tile';
 import View from 'ol/View';
 import proj4 from 'proj4';
-import {applyTransform} from 'ol/extent';
-import {get as getProjection, getTransform} from 'ol/proj';
-import {register} from 'ol/proj/proj4';
+import { applyTransform } from 'ol/extent';
+import { get as getProjection, getTransform } from 'ol/proj';
+import { register } from 'ol/proj/proj4';
 
 var graticule = new Graticule({
   // the style to use for the lines, optional.
   strokeStyle: new Stroke({
+    color: 'rgba(0,0,0,0.7)',
+    // color: 'rgba(0,255,255,0.7)',
+    width: 1,
+    // width: 4,
+    // lineDash: [7, 3],
+    // lineDash: [0.5, 4],
+    lineCap: 'butt',
+  }),
+  /* strokeStyle: new Stroke({
     color: 'rgba(255,120,0,0.9)',
     width: 2,
     lineDash: [0.5, 4],
-  }),
+  }), */
   showLabels: true,
   visible: false,
   wrapX: false,
 });
 
+var graticule2 = new Graticule({
+  // the style to use for the lines, optional.
+  strokeStyle: new Stroke({
+    color: 'rgba(255,255,255,0.7)',
+    // color: 'rgba(0,0,0,0.7)',
+    width: 4,
+    lineCap: 'butt',
+  }),
+  showLabels: false,
+  visible: false,
+  wrapX: false,
+});
+
+const osmLayer = new TileLayer({
+  source: new OSM(),
+});
+const baseLayers = [ osmLayer ];
+
 var map = new Map({
   layers: [
-    new TileLayer({
-      source: new OSM(),
-    }),
-    graticule ],
+    osmLayer,
+    graticule],
   target: 'map',
   view: new View({
     projection: 'EPSG:3857',
@@ -36,12 +61,16 @@ var map = new Map({
     zoom: 1,
   }),
 });
+graticule2 && map.addLayer(graticule2)
+// console.log(`map`, map);
+window.debug = { map }
 
 var queryInput = document.getElementById('epsg-query');
 var searchButton = document.getElementById('epsg-search');
 var resultSpan = document.getElementById('epsg-result');
 var renderEdgesCheckbox = document.getElementById('render-edges');
 var showGraticuleCheckbox = document.getElementById('show-graticule');
+const layerSwitcherDiv = document.getElementById('layer-switcher');
 
 function setProjection(code, name, proj4def, bbox) {
   if (code === null || name === null || proj4def === null || bbox === null) {
@@ -145,13 +174,44 @@ renderEdgesCheckbox.onchange = function () {
 /**
  * Handle checkbox change event.
  */
-showGraticuleCheckbox.onchange = function () {
+const graticuleOnChange = function () {
   graticule.setVisible(showGraticuleCheckbox.checked);
+  graticule2 ? graticule2.setVisible(showGraticuleCheckbox.checked) : 0;
 };
+showGraticuleCheckbox.onchange = graticuleOnChange
 
 // Initiate:
-// alert(1)
-graticule.setVisible(showGraticuleCheckbox.checked);
-const match = window.location.search.match(/projQuery=([0-9]*[^&])+/i);
-const urlProjQueryNumber = match ? match[1] : 25832;
-search(urlProjQueryNumber)
+graticuleOnChange()
+// graticule.setVisible(showGraticuleCheckbox.checked);
+const match = window.location.search.match(/projQuery=\D*([0-9]*)\D*[^&]*/i);
+// const match = window.location.search.match(/projQuery=([0-9]*[^&])+/i);
+// console.log(`match`, match);
+const isMatch = !!(match && match[1]);
+const urlProjQueryNumber =  isMatch ? match[1] : 25832;
+search(urlProjQueryNumber);
+
+if (!isMatch) {
+  setTimeout(() => {
+    map.getView().setCenter([545817.3271329966, 6177480.060318704]);
+    map.getView().setZoom(5);
+  }, 1500)
+}
+
+// Set up layer switcher:
+baseLayers.forEach((layer, i)=>{  
+  const div = document.createElement('div')
+  div.style = `
+    background: #eee; 
+    margin: 1rem; padding: 0.5rem; width: 20rem;
+    border-radius: 0.5rem; cursor: pointer;
+    border: 1px solid #999;
+    box-shadow: rgb(238 238 238) 4px 4px 4px 0px;
+  `;
+  div.innerHTML = `Layer ${i+1}, visible: ${layer.getVisible()}`;
+  div.onclick = ()=>{  
+    layer.setVisible(!layer.getVisible());
+    div.innerHTML = div.innerHTML.replace(/true|false/gi, layer.getVisible());
+  }
+  layerSwitcherDiv.appendChild(div)
+});
+
