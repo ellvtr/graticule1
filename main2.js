@@ -12,7 +12,7 @@ import { applyTransform } from 'ol/extent';
 import { get as getProjection, getTransform } from 'ol/proj';
 import { register } from 'ol/proj/proj4';
 
-var graticule = new Graticule({
+const graticule = new Graticule({
   // the style to use for the lines, optional.
   strokeStyle: new Stroke({
     color: 'rgba(0,0,0,0.7)',
@@ -33,7 +33,7 @@ var graticule = new Graticule({
   wrapX: false,
 });
 
-var graticule2 = new Graticule({
+const graticule2 = new Graticule({
   // the style to use for the lines, optional.
   strokeStyle: new Stroke({
     color: 'rgba(255,255,255,0.7)',
@@ -45,6 +45,7 @@ var graticule2 = new Graticule({
   visible: false,
   wrapX: false,
 });
+// const graticule2 = undefined;
 
 const osmLayer = new TileLayer({
   source: new OSM(),
@@ -63,7 +64,7 @@ const stamen2 = new TileLayer({
 });
 const baseLayers = [ osmLayer, stamen1, stamen2 ];
 
-var map = new Map({
+const map = new Map({
   layers: [
     ...baseLayers,
     graticule],
@@ -77,11 +78,12 @@ var map = new Map({
 graticule2 && map.addLayer(graticule2)
 window.debug = { map, baseLayers }
 
-var queryInput = document.getElementById('epsg-query');
-var searchButton = document.getElementById('epsg-search');
-var resultSpan = document.getElementById('epsg-result');
-var renderEdgesCheckbox = document.getElementById('render-edges');
-var showGraticuleCheckbox = document.getElementById('show-graticule');
+const queryInput = document.getElementById('epsg-query');
+const searchButton = document.getElementById('epsg-search');
+const resultSpan = document.getElementById('epsg-result');
+const renderEdgesCheckbox = document.getElementById('render-edges');
+const showGraticuleCheckbox = document.getElementById('show-graticule');
+const showOutlineCheckbox = document.getElementById('show-graticule-outline');
 const layerSwitcherDiv = document.getElementById('layer-switcher');
 
 function setProjection(code, name, proj4def, bbox) {
@@ -99,13 +101,13 @@ function setProjection(code, name, proj4def, bbox) {
 
   resultSpan.innerHTML = '(' + code + ') ' + name;
 
-  var newProjCode = 'EPSG:' + code;
+  const newProjCode = 'EPSG:' + code;
   proj4.defs(newProjCode, proj4def);
   register(proj4);
-  var newProj = getProjection(newProjCode);
-  var fromLonLat = getTransform('EPSG:4326', newProj);
+  const newProj = getProjection(newProjCode);
+  const fromLonLat = getTransform('EPSG:4326', newProj);
 
-  var worldExtent = [bbox[1], bbox[2], bbox[3], bbox[0]];
+  const worldExtent = [bbox[1], bbox[2], bbox[3], bbox[0]];
   newProj.setWorldExtent(worldExtent);
 
   // approximate calculation of projection extent,
@@ -113,9 +115,9 @@ function setProjection(code, name, proj4def, bbox) {
   if (bbox[1] > bbox[3]) {
     worldExtent = [bbox[1], bbox[2], bbox[3] + 360, bbox[0]];
   }
-  var extent = applyTransform(worldExtent, fromLonLat, undefined, 8);
+  const extent = applyTransform(worldExtent, fromLonLat, undefined, 8);
   newProj.setExtent(extent);
-  var newView = new View({
+  const newView = new View({
     projection: newProj,
   });
   map.setView(newView);
@@ -132,16 +134,16 @@ function search(query) {
       return response.json();
     })
     .then(function (json) {
-      var results = json['results'];
+      const results = json['results'];
       // console.log(`results`, results);
       if (results && results.length > 0) {
         for (var i = 0, ii = results.length; i < ii; i++) {
-          var result = results[i];
+          const result = results[i];
           if (result) {
-            var code = result['code'];
-            var name = result['name'];
-            var proj4def = result['proj4'];
-            var bbox = result['bbox'];
+            const code = result['code'];
+            const name = result['name'];
+            const proj4def = result['proj4'];
+            const bbox = result['bbox'];
             if (
               code &&
               code.length > 0 &&
@@ -175,7 +177,7 @@ searchButton.onclick = function (event) {
 renderEdgesCheckbox.onchange = function () {
   map.getLayers().forEach(function (layer) {
     if (layer instanceof TileLayer) {
-      var source = layer.getSource();
+      const source = layer.getSource();
       if (source instanceof TileImage) {
         source.setRenderReprojectionEdges(renderEdgesCheckbox.checked);
       }
@@ -188,12 +190,16 @@ renderEdgesCheckbox.onchange = function () {
  */
 const graticuleOnChange = function () {
   graticule.setVisible(showGraticuleCheckbox.checked);
-  graticule2 ? graticule2.setVisible(showGraticuleCheckbox.checked) : 0;
+  // graticule2 ? graticule2.setVisible(showGraticuleCheckbox.checked) : 0;
 };
 showGraticuleCheckbox.onchange = graticuleOnChange
+const outlineOnchange = ()=>{
+  graticule2.setVisible(showOutlineCheckbox.checked); 
+}
+showOutlineCheckbox.onchange = outlineOnchange;
 
 // Initiate:
-graticuleOnChange()
+graticuleOnChange(); outlineOnchange();
 const match = window.location.search.match(/projQuery=\D*([0-9]*)\D*[^&]*/i);
 const isMatch = !!(match && match[1]);
 const urlProjQueryNumber =  isMatch ? match[1] : 25832;
