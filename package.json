@@ -10,6 +10,6 @@
   "scripts": {
     "start": "parcel start.html -p 1234",
     "start2": "parcel start2.html -p 1235",
-    "build": "parcel build --public-url . start2.html"
+    "build": "parcel build --public-url . start2.html --dist-dir build"
   }
 }
