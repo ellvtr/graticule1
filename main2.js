@@ -65,9 +65,7 @@ const stamen2 = new TileLayer({
 const baseLayers = [ osmLayer, stamen1, stamen2 ];
 
 const map = new Map({
-  layers: [
-    ...baseLayers,
-    graticule],
+  layers: baseLayers,
   target: 'map',
   view: new View({
     projection: 'EPSG:3857',
@@ -75,7 +73,8 @@ const map = new Map({
     zoom: 1,
   }),
 });
-graticule2 && map.addLayer(graticule2)
+graticule2 && map.addLayer(graticule2);
+graticule && map.addLayer(graticule);
 window.debug = { map, baseLayers }
 
 const queryInput = document.getElementById('epsg-query');
