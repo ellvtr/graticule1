@@ -135,8 +135,8 @@ function search(query) {
     })
     .then(function (json) {
       const results = json['results'];
-      // console.log(`results`, results);
       if (results && results.length > 0) {
+        window.history.replaceState(null, query, `${window.location.origin}/?projQuery=${query}`);
         for (var i = 0, ii = results.length; i < ii; i++) {
           const result = results[i];
           if (result) {
